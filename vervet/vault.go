@@ -35,6 +35,45 @@ func newVaultClient(addr string) (*vaultClient, error) {
 	return vault, nil
 }
 
+// connect to Vault server and execute rekey operation
+func (vault *vaultClient) rekey(keys []string) (*api.RekeyStatusResponse, error) {
+	resp, err := vault.apiClient.Sys().RekeyStatus()
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.Started {
+		return resp, fmt.Errorf("%s - rekey process has not been started", vault.url.Host)
+	}
+
+	complete := false
+	nonce := resp.Nonce
+	for _, key := range keys {
+		resp, err := vault.apiClient.Sys().RekeyUpdate(key, nonce)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.Complete {
+			complete = true
+			break
+		}
+	}
+
+	PrintInfo(fmt.Sprintf("%s - provided %d rekey key share(s) toward rekyey progress", vault.url.Host, len(keys)))
+
+	resp, err = vault.apiClient.Sys().RekeyStatus()
+	if err != nil {
+		return nil, err
+	}
+
+	if complete {
+		PrintSuccess(fmt.Sprintf("%s - rekey complete", vault.url.Host))
+	}
+
+	return resp, nil
+}
+
 // connect to Vault server and execute unseal operation
 func (vault *vaultClient) unseal(keys []string) (*api.SealStatusResponse, error) {
 	resp, err := vault.apiClient.Sys().SealStatus()
@@ -150,5 +189,31 @@ func printGenRootStatus(resp *api.GenerateRootStatusResponse) {
 
 	if resp.EncodedRootToken != "" {
 		PrintKV("Encoded root token", resp.EncodedRootToken)
+	}
+}
+
+func printRekeyStatus(resp *api.RekeyStatusResponse) {
+	status := "not started"
+	if resp.Started {
+		status = "started"
+
+		if resp.Required <= resp.Progress {
+			status = "complete"
+		}
+	}
+
+	PrintKV("Rekey", status)
+
+	if resp.Started {
+		PrintKV("Nonce", resp.Nonce)
+		PrintKV("Progress", fmt.Sprintf("%d/%d", resp.Progress, resp.Required))
+		PrintKV("New threshold", fmt.Sprintf("%d/%d", resp.T, resp.N))
+		PrintKV("Backup", fmt.Sprintf("%t", resp.Backup))
+		PrintKV("Verification required", fmt.Sprintf("%t", resp.VerificationRequired))
+		PrintKV("Verification nonce", resp.VerificationNonce)
+
+		for _, fingerprint := range resp.PGPFingerprints {
+			PrintKV("PGP fingerprint", fingerprint)
+		}
 	}
 }
