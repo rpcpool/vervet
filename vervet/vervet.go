@@ -75,14 +75,14 @@ func Rekey(vaultAddr string, encryptedKeys []string) error {
 		return err
 	}
 
-	resp, err := vault.rekey(keys)
+	resp, rekeyResp, err := vault.rekey(keys)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println()
 	PrintHeader("Rekey Status")
-	printRekeyStatus(resp)
+	printRekeyStatus(resp, rekeyResp)
 
 	return nil
 }
