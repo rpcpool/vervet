@@ -217,3 +217,22 @@ func ShowYubiKey(sn string) error {
 
 	return nil
 }
+
+// Re-encrypt a list of unseal keys with a new public key
+func Recrypt(pubkey string, encryptedKeys []string) error {
+	keys, err := decryptUnsealKeys(encryptedKeys)
+	if err != nil {
+		return err
+	}
+
+	reencryptedKeys, err := encryptKeys(pubkey, keys)
+	if err != nil {
+		return err
+	}
+
+	PrintSuccess("Re-encrypted unseal keys with new public key")
+	for _, key := range reencryptedKeys {
+		PrintKV("    key", key)
+	}
+	return nil
+}

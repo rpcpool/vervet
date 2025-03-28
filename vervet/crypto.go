@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"syscall"
+	"vervet/pgp"
 	"vervet/yubikeypgp"
 	"vervet/yubikeyscard"
 
+	"golang.org/x/crypto/openpgp"
 	"golang.org/x/term"
 )
 
@@ -112,4 +114,38 @@ func promptPIN() ([]byte, error) {
 	}
 
 	return p, nil
+}
+
+// Take a pubkey and a list of decrypted unseal keys and encrypt them with the pubkey
+func encryptKeys(pubkey string, unsealKeys []string) ([]string, error) {
+	pubEntity, err := pgp.GetEntity([]byte(pubkey), []byte{})
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	if pubEntity == nil {
+		return []string{}, errors.New("public key entity is nil")
+	}
+
+	var keys []string
+	for _, unsealKey := range unsealKeys {
+		encryptedKey, err := encryptKey(pubEntity, unsealKey)
+		if err != nil {
+			PrintError(err.Error())
+		} else {
+			keys = append(keys, string(encryptedKey))
+		}
+	}
+
+	return keys, nil
+}
+
+func encryptKey(pubEntity *openpgp.Entity, unsealKey string) ([]byte, error) {
+	// Encrypt the unseal key with the public key entity
+	encrypted, err := pgp.Encrypt(pubEntity, []byte(unsealKey))
+	if err != nil {
+		return []byte{}, err
+	}
+	return encrypted, nil
 }
