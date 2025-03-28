@@ -231,8 +231,9 @@ func Recrypt(pubkey string, encryptedKeys []string) error {
 	}
 
 	PrintSuccess("Re-encrypted unseal keys with new public key")
-	for _, key := range reencryptedKeys {
-		PrintKV("    key", key)
+	PrintHeader("Re-encrypted Unseal Keys")
+	for i, key := range reencryptedKeys {
+		PrintKV("    key", fmt.Sprintf("%d: %s", i, key))
 	}
 	return nil
 }
