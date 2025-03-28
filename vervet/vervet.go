@@ -234,7 +234,7 @@ func Recrypt(pubkey string, encryptedKeys []string) error {
 	PrintHeader("Re-encrypted Unseal Keys")
 	PrintKV("Number of keys", fmt.Sprintf("%d", len(reencryptedKeys)))
 	for i, key := range reencryptedKeys {
-		PrintKV(fmt.Sprintf("    key %d", (i+1)), key)
+		PrintKV(fmt.Sprintf("    Key %d", (i+1)), key)
 	}
 	return nil
 }
