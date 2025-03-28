@@ -26,15 +26,19 @@ var recryptKeySubCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		keyPath := args[0]
-		pubKeyPath := args[1]
+		pubKey, err := vervet.ReadPubKeyFile(args[1])
 
-		keys, err := vervet.ReadKeyFile(keyPath)
 		if err != nil {
 			vervet.PrintFatal(err.Error(), 1)
 		}
 
-		if err := vervet.Recrypt(pubKeyPath, keys); err != nil {
-			vervet.PrintFatal(err.Error(), 1)
+		keys, err := vervet.ReadKeyFile(keyPath)
+		if err != nil {
+			vervet.PrintFatal(err.Error(), 2)
+		}
+
+		if err := vervet.Recrypt(pubKey, keys); err != nil {
+			vervet.PrintFatal(err.Error(), 3)
 		}
 	},
 }
@@ -46,20 +50,24 @@ var recryptClusterSubCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		clusterName := args[0]
-		pubKeyPath := args[1]
+		pubKey, err := vervet.ReadPubKeyFile(args[1])
+
+		if err != nil {
+			vervet.PrintFatal(err.Error(), 1)
+		}
 
 		cluster, err := getVaultClusterConfig(clusterName)
 		if err != nil {
-			vervet.PrintFatal(err.Error(), 1)
+			vervet.PrintFatal(err.Error(), 2)
 		}
 
 		keys, err := cluster.keyring()
 		if err != nil {
-			vervet.PrintFatal(err.Error(), 1)
+			vervet.PrintFatal(err.Error(), 3)
 		}
 
-		if err := vervet.Recrypt(pubKeyPath, keys); err != nil {
-			vervet.PrintFatal(err.Error(), 1)
+		if err := vervet.Recrypt(pubKey, keys); err != nil {
+			vervet.PrintFatal(err.Error(), 4)
 		}
 	},
 }
