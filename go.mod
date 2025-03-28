@@ -5,6 +5,7 @@ go 1.22.0
 toolchain go1.23.4
 
 require (
+	github.com/ProtonMail/go-crypto v1.1.6
 	github.com/ebfe/scard v0.0.0-20241214075232-7af069cabc25
 	github.com/hashicorp/vault/api v1.15.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
@@ -17,6 +18,7 @@ require (
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect

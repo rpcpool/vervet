@@ -1,16 +1,19 @@
 package vervet
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"syscall"
-	"vervet/pgp"
 	"vervet/yubikeypgp"
 	"vervet/yubikeyscard"
 
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/term"
+
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )
 
 const (
@@ -117,20 +120,23 @@ func promptPIN() ([]byte, error) {
 }
 
 // Take a pubkey and a list of decrypted unseal keys and encrypt them with the pubkey
-func encryptKeys(pubkey string, unsealKeys []string) ([]string, error) {
-	pubEntity, err := pgp.GetEntity([]byte(pubkey), []byte{})
+func encryptKeys(keystring string, unsealKeys []string) ([]string, error) {
+	data, err := base64.StdEncoding.DecodeString(keystring)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding given PGP key: %w", err)
+	}
+	entity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
+	if err != nil {
+		return nil, fmt.Errorf("error parsing given PGP key: %w", err)
+	}
 
 	if err != nil {
 		return []string{}, err
 	}
 
-	if pubEntity == nil {
-		return []string{}, errors.New("public key entity is nil")
-	}
-
 	var keys []string
 	for _, unsealKey := range unsealKeys {
-		encryptedKey, err := encryptKey(pubEntity, unsealKey)
+		encryptedKey, err := encryptKey(entity, []byte(unsealKey))
 		if err != nil {
 			PrintError(err.Error())
 		} else {
@@ -141,11 +147,18 @@ func encryptKeys(pubkey string, unsealKeys []string) ([]string, error) {
 	return keys, nil
 }
 
-func encryptKey(pubEntity *openpgp.Entity, unsealKey string) ([]byte, error) {
+func encryptKey(entity *openpgp.Entity, unsealKey []byte) ([]byte, error) {
 	// Encrypt the unseal key with the public key entity
-	encrypted, err := pgp.EncryptB64(pubEntity, []byte(unsealKey))
+	buf := bytes.NewBuffer(nil)
+	pt, err := openpgp.Encrypt(buf, []*openpgp.Entity{entity}, nil, nil, nil)
 	if err != nil {
-		return []byte{}, err
+		return nil, fmt.Errorf("error setting up encryption for PGP message: %w", err)
 	}
-	return encrypted, nil
+	_, err = pt.Write(unsealKey)
+	if err != nil {
+		return nil, fmt.Errorf("error encrypting PGP message: %w", err)
+	}
+	pt.Close()
+
+	return buf, nil
 }
