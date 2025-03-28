@@ -153,7 +153,9 @@ func encryptKeys(keystring string, unsealKeys []string) ([]string, error) {
 		if err != nil {
 			PrintError(err.Error())
 		} else {
-			keys = append(keys, string(encryptedKey))
+			// encode encryptedKey as base64
+			encryptedKeyB64 := base64.StdEncoding.EncodeToString(encryptedKey)
+			keys = append(keys, encryptedKeyB64)
 		}
 	}
 
