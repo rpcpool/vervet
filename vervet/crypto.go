@@ -9,7 +9,6 @@ import (
 	"vervet/yubikeypgp"
 	"vervet/yubikeyscard"
 
-	"golang.org/x/crypto/openpgp"
 	"golang.org/x/term"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
@@ -160,5 +159,5 @@ func encryptKey(entity *openpgp.Entity, unsealKey []byte) ([]byte, error) {
 	}
 	pt.Close()
 
-	return buf, nil
+	return buf.Bytes(), nil
 }
