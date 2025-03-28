@@ -1,15 +1,39 @@
 package pgp
 
 import (
-	"golang.org/x/crypto/openpgp"
 	"bytes"
-	"fmt"
-	"io"
-	"golang.org/x/crypto/openpgp/armor"
 	"compress/gzip"
 	_ "crypto/sha256"
+	"encoding/base64"
+	"fmt"
+	"io"
+
+	"golang.org/x/crypto/openpgp"
+	"golang.org/x/crypto/openpgp/armor"
 	_ "golang.org/x/crypto/ripemd160"
 )
+
+func EncryptB64(entity *openpgp.Entity, message []byte) ([]byte, error) {
+	buf := new(bytes.Buffer)
+
+	encryptorWriter, err := openpgp.Encrypt(buf, []*openpgp.Entity{entity}, nil, nil, nil)
+	if err != nil {
+		return []byte{}, fmt.Errorf("Error creating entity for encryption: %v", err)
+	}
+	messageReader := bytes.NewReader(message)
+
+	_, err = io.Copy(encryptorWriter, messageReader)
+	if err != nil {
+		return []byte{}, fmt.Errorf("Error writing data to encryptor: %v", err)
+	}
+	encryptorWriter.Close()
+
+	// Encode the encrypted message to base64
+	encodedMessage := base64.StdEncoding.EncodeToString(buf.Bytes())
+
+	// Return the base64 encoded message
+	return []byte(encodedMessage), nil
+}
 
 func Encrypt(entity *openpgp.Entity, message []byte) ([]byte, error) {
 	// Create buffer to write output to

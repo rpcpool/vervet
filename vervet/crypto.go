@@ -143,7 +143,7 @@ func encryptKeys(pubkey string, unsealKeys []string) ([]string, error) {
 
 func encryptKey(pubEntity *openpgp.Entity, unsealKey string) ([]byte, error) {
 	// Encrypt the unseal key with the public key entity
-	encrypted, err := pgp.Encrypt(pubEntity, []byte(unsealKey))
+	encrypted, err := pgp.EncryptB64(pubEntity, []byte(unsealKey))
 	if err != nil {
 		return []byte{}, err
 	}
