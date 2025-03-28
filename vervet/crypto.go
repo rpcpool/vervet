@@ -120,13 +120,27 @@ func promptPIN() ([]byte, error) {
 
 // Take a pubkey and a list of decrypted unseal keys and encrypt them with the pubkey
 func encryptKeys(keystring string, unsealKeys []string) ([]string, error) {
-	data, err := base64.StdEncoding.DecodeString(keystring)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding given PGP key: %w", err)
-	}
-	entity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
-	if err != nil {
-		return nil, fmt.Errorf("error parsing given PGP key: %w", err)
+	var entity *openpgp.Entity
+	entityList, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(keystring))
+	if err == nil {
+		if len(entityList) != 1 {
+			return []string{}, fmt.Errorf("more than one key found in file")
+		}
+		if entityList[0] == nil {
+			return []string{}, fmt.Errorf("primary key was nil for file")
+		}
+
+		entity = entityList[0]
+	} else {
+		data, err := base64.StdEncoding.DecodeString(keystring)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding given PGP key: %w", err)
+		}
+
+		entity, err = openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
+		if err != nil {
+			return nil, fmt.Errorf("error parsing given PGP key: %w", err)
+		}
 	}
 
 	if err != nil {
