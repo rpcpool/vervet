@@ -62,6 +62,31 @@ func GenerateRoot(vaultAddr string, encryptedKeys []string) error {
 	return nil
 }
 
+// Rekey will decrypt the provided unseal key and enter the key share
+// to progress the rekey attempt.
+func Rekey(vaultAddr string, encryptedKeys []string) error {
+	keys, err := decryptUnsealKeys(encryptedKeys)
+	if err != nil {
+		return err
+	}
+
+	vault, err := newVaultClient(vaultAddr)
+	if err != nil {
+		return err
+	}
+
+	resp, rekeyResp, err := vault.rekey(keys)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println()
+	PrintHeader("Rekey Status")
+	printRekeyStatus(resp, rekeyResp)
+
+	return nil
+}
+
 // ListVaultStatus will output of the status the provided Vault address.
 func ListVaultStatus(vaultAddr string) error {
 	vault, err := newVaultClient(vaultAddr)

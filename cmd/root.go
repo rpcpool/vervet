@@ -18,6 +18,7 @@ var (
 	vaultPort              int
 	vaultTLSDisable        bool
 	vaultGenerateRootNonce string
+	vaultRekeyNonce        string
 
 	rootCmd = &cobra.Command{
 		Use:   "vervet",
