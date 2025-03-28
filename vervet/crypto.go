@@ -1,6 +1,7 @@
 package vervet
 
 import (
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -9,6 +10,9 @@ import (
 	"vervet/yubikeyscard"
 
 	"golang.org/x/term"
+
+	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/ProtonMail/go-crypto/openpgp/packet"
 )
 
 const (
@@ -112,4 +116,64 @@ func promptPIN() ([]byte, error) {
 	}
 
 	return p, nil
+}
+
+// Take a pubkey and a list of decrypted unseal keys and encrypt them with the pubkey
+func encryptKeys(keystring string, unsealKeys []string) ([]string, error) {
+	var entity *openpgp.Entity
+	entityList, err := openpgp.ReadArmoredKeyRing(bytes.NewBufferString(keystring))
+	if err == nil {
+		if len(entityList) != 1 {
+			return []string{}, fmt.Errorf("more than one key found in file")
+		}
+		if entityList[0] == nil {
+			return []string{}, fmt.Errorf("primary key was nil for file")
+		}
+
+		entity = entityList[0]
+	} else {
+		data, err := base64.StdEncoding.DecodeString(keystring)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding given PGP key: %w", err)
+		}
+
+		entity, err = openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
+		if err != nil {
+			return nil, fmt.Errorf("error parsing given PGP key: %w", err)
+		}
+	}
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	var keys []string
+	for _, unsealKey := range unsealKeys {
+		encryptedKey, err := encryptKey(entity, []byte(unsealKey))
+		if err != nil {
+			PrintError(err.Error())
+		} else {
+			// encode encryptedKey as base64
+			encryptedKeyB64 := base64.StdEncoding.EncodeToString(encryptedKey)
+			keys = append(keys, encryptedKeyB64)
+		}
+	}
+
+	return keys, nil
+}
+
+func encryptKey(entity *openpgp.Entity, unsealKey []byte) ([]byte, error) {
+	// Encrypt the unseal key with the public key entity
+	buf := bytes.NewBuffer(nil)
+	pt, err := openpgp.Encrypt(buf, []*openpgp.Entity{entity}, nil, nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error setting up encryption for PGP message: %w", err)
+	}
+	_, err = pt.Write(unsealKey)
+	if err != nil {
+		return nil, fmt.Errorf("error encrypting PGP message: %w", err)
+	}
+	pt.Close()
+
+	return buf.Bytes(), nil
 }

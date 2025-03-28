@@ -62,6 +62,31 @@ func GenerateRoot(vaultAddr string, encryptedKeys []string) error {
 	return nil
 }
 
+// Rekey will decrypt the provided unseal key and enter the key share
+// to progress the rekey attempt.
+func Rekey(vaultAddr string, encryptedKeys []string) error {
+	keys, err := decryptUnsealKeys(encryptedKeys)
+	if err != nil {
+		return err
+	}
+
+	vault, err := newVaultClient(vaultAddr)
+	if err != nil {
+		return err
+	}
+
+	resp, rekeyResp, err := vault.rekey(keys)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println()
+	PrintHeader("Rekey Status")
+	printRekeyStatus(resp, rekeyResp)
+
+	return nil
+}
+
 // ListVaultStatus will output of the status the provided Vault address.
 func ListVaultStatus(vaultAddr string) error {
 	vault, err := newVaultClient(vaultAddr)
@@ -190,5 +215,26 @@ func ShowYubiKey(sn string) error {
 	authGenDate := int64(binary.BigEndian.Uint32(ard.KeyGenDates.Auth[:]))
 	PrintKV("    created", time.Unix(authGenDate, 0).String())
 
+	return nil
+}
+
+// Re-encrypt a list of unseal keys with a new public key
+func Recrypt(pubkey string, encryptedKeys []string) error {
+	keys, err := decryptUnsealKeys(encryptedKeys)
+	if err != nil {
+		return err
+	}
+
+	reencryptedKeys, err := encryptKeys(pubkey, keys)
+	if err != nil {
+		return err
+	}
+
+	PrintSuccess("Re-encrypted unseal keys with new public key")
+	PrintHeader("Re-encrypted Unseal Keys")
+	PrintKV("Number of keys", fmt.Sprintf("%d", len(reencryptedKeys)))
+	for i, key := range reencryptedKeys {
+		PrintKV(fmt.Sprintf("Key %d", (i+1)), key)
+	}
 	return nil
 }

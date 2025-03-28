@@ -35,6 +35,45 @@ func newVaultClient(addr string) (*vaultClient, error) {
 	return vault, nil
 }
 
+// connect to Vault server and execute rekey operation
+func (vault *vaultClient) rekey(keys []string) (*api.RekeyStatusResponse, *api.RekeyUpdateResponse, error) {
+	resp, err := vault.apiClient.Sys().RekeyStatus()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !resp.Started {
+		return resp, nil, fmt.Errorf("%s - rekey process has not been started", vault.url.Host)
+	}
+
+	var rekeyResp *api.RekeyUpdateResponse
+	nonce := resp.Nonce
+	for _, key := range keys {
+		rekeyResp, err = vault.apiClient.Sys().RekeyUpdate(key, nonce)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if rekeyResp.Complete {
+			break
+		}
+	}
+
+	PrintInfo(fmt.Sprintf("%s - provided %d rekey key share(s) toward rekyey progress", vault.url.Host, len(keys)))
+
+	if rekeyResp.Complete {
+		PrintSuccess(fmt.Sprintf("%s - rekey complete", vault.url.Host))
+		return nil, rekeyResp, nil
+	} else {
+		resp, err = vault.apiClient.Sys().RekeyStatus()
+		if err != nil {
+			return nil, rekeyResp, err
+		}
+	}
+
+	return resp, rekeyResp, nil
+}
+
 // connect to Vault server and execute unseal operation
 func (vault *vaultClient) unseal(keys []string) (*api.SealStatusResponse, error) {
 	resp, err := vault.apiClient.Sys().SealStatus()
@@ -150,5 +189,49 @@ func printGenRootStatus(resp *api.GenerateRootStatusResponse) {
 
 	if resp.EncodedRootToken != "" {
 		PrintKV("Encoded root token", resp.EncodedRootToken)
+	}
+}
+
+func printRekeyStatus(resp *api.RekeyStatusResponse, rekeyResp *api.RekeyUpdateResponse) {
+	var status = "not started"
+	if resp != nil {
+		if resp.Started {
+			status = "started"
+		}
+	} else if rekeyResp != nil {
+		// If the rekey response is complete, then the status is nil
+		if rekeyResp.Complete {
+			status = "complete"
+		}
+	}
+
+	PrintKV("Status", status)
+
+	if resp != nil {
+		PrintKV("Nonce", resp.Nonce)
+		PrintKV("Progress", fmt.Sprintf("%d/%d", resp.Progress, resp.Required))
+		PrintKV("New threshold", fmt.Sprintf("%d/%d", resp.T, resp.N))
+		PrintKV("Backup", fmt.Sprintf("%t", resp.Backup))
+		PrintKV("Verification required", fmt.Sprintf("%t", resp.VerificationRequired))
+		PrintKV("Verification nonce", resp.VerificationNonce)
+
+		for _, fingerprint := range resp.PGPFingerprints {
+			PrintKV("PGP fingerprint", fingerprint)
+		}
+	}
+
+	if rekeyResp != nil {
+		// If the rekey is complete then print out these values for reference
+		if resp == nil {
+			PrintKV("Nonce", rekeyResp.Nonce)
+			PrintKV("Backup", fmt.Sprintf("%t", rekeyResp.Backup))
+			PrintKV("Verification required", fmt.Sprintf("%t", rekeyResp.VerificationRequired))
+			PrintKV("Verification nonce", rekeyResp.VerificationNonce)
+		}
+		for i, fingerprint := range rekeyResp.PGPFingerprints {
+			PrintKV("PGP fingerprint", fingerprint)
+			PrintKV("    Key", rekeyResp.Keys[i])
+			PrintKV("    Key (base64)", rekeyResp.KeysB64[i])
+		}
 	}
 }

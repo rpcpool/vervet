@@ -27,6 +27,15 @@ func ReadKeyFile(path string) ([]string, error) {
 	return strings.Split(strings.TrimSpace(string(buf)), "\n"), nil
 }
 
+// Read public key file
+func ReadPubKeyFile(path string) (string, error) {
+	buf, err := readFile(path, keyFileSizeMax)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
+}
+
 // readFile will read a file from the provided path up to the byte length
 // limit provided.
 func readFile(path string, maxBytes int64) ([]byte, error) {
