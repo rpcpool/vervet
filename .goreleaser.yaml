@@ -7,7 +7,6 @@ version: 2
 
 before:
   hooks:
-    - sudo apt-get install -y libpcsclite-dev
     - go mod tidy
 
 builds:
