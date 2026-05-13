@@ -230,8 +230,10 @@ func printRekeyStatus(resp *api.RekeyStatusResponse, rekeyResp *api.RekeyUpdateR
 		}
 		for i, fingerprint := range rekeyResp.PGPFingerprints {
 			PrintKV("PGP fingerprint", fingerprint)
-			PrintKV("    Key", rekeyResp.Keys[i])
-			PrintKV("    Key (base64)", rekeyResp.KeysB64[i])
+			if rekeyResp.Complete {
+				PrintKV("    Key", rekeyResp.Keys[i])
+				PrintKV("    Key (base64)", rekeyResp.KeysB64[i])
+			}
 		}
 	}
 }

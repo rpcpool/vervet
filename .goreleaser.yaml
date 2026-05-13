@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+#
+# GCS upload, cosigning, and GitHub Release publishing are injected via
+# ci/goreleaser-patch.yaml in Binaries-ci at build time.
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: vervet
+    main: .
+    binary: vervet
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  - formats: [binary]
+    name_template: vervet-linux-amd64
+
+changelog:
+  sort: asc
+  use: github

@@ -31,6 +31,7 @@ $ make install
 generate-root     Generate Vault root token
 help              Help about any command
 list              List connected YubiKeys and configured Vault clusters
+rekey             Rekey Vault
 show              Show details of YubiKeys and Vault clusters
 unseal            Unseal Vault by server or cluster
 ```
@@ -78,6 +79,45 @@ To unseal an individual server:
 
 ```bash
 $ vervet unseal server prod-vault-01.example.local key_file.pgp    # decrypt unseal key in key_file.pgp and unseal prod-vault-01
+```
+
+### Rekey
+
+The `rekey` command submits your YubiKey-decrypted unseal key share toward an in-progress rekey operation. The rekey process must be initiated separately (e.g. via `vault operator rekey -init`) before running vervet.
+
+Rekey a cluster (uses the first server in the cluster config):
+
+```bash
+$ vervet rekey cluster us-west
+```
+
+Rekey an individual server:
+
+```bash
+$ vervet rekey server prod-vault-01.example.local key_file.pgp
+```
+
+The `--nonce` / `-n` flag is required when submitting to an already-started rekey:
+
+```bash
+$ vervet rekey cluster us-west --nonce b2467027-2c91-f39f-7163-68bf4c2610df
+```
+
+Once all required key shares have been submitted, vervet prints the new PGP-encrypted key shares alongside their PGP fingerprints.
+
+#### Retrieving backup keys
+
+If the rekey was initiated with `-backup=true` (the default for vervet-managed clusters), Vault stores a backup of the encrypted new key shares. Retrieve them at any time:
+
+```bash
+vault operator rekey -backup-retrieve -format=json \
+  | jq -r '.data.keys["<PGP_FINGERPRINT_UPPERCASE">][]'
+```
+
+Delete the backup once it has been safely stored:
+
+```bash
+vault operator rekey -backup-delete
 ```
 
 ### Generate root token
