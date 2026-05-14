@@ -52,6 +52,9 @@ archives:
       {{- if eq .Arch "amd64" }}x86_64
       {{- else }}arm64{{ end }}
 
+release:
+  replace_existing_draft: true
+
 changelog:
   sort: asc
   use: github
