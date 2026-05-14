@@ -132,19 +132,15 @@ func encryptKeys(keystring string, unsealKeys []string) ([]string, error) {
 
 		entity = entityList[0]
 	} else {
-		data, err := base64.StdEncoding.DecodeString(keystring)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding given PGP key: %w", err)
+		data, decodeErr := base64.StdEncoding.DecodeString(keystring)
+		if decodeErr != nil {
+			return nil, fmt.Errorf("error decoding given PGP key: %w", decodeErr)
 		}
 
 		entity, err = openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
 		if err != nil {
 			return nil, fmt.Errorf("error parsing given PGP key: %w", err)
 		}
-	}
-
-	if err != nil {
-		return []string{}, err
 	}
 
 	var keys []string
@@ -173,7 +169,9 @@ func encryptKey(entity *openpgp.Entity, unsealKey []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error encrypting PGP message: %w", err)
 	}
-	pt.Close()
+	if err := pt.Close(); err != nil {
+		return nil, fmt.Errorf("error finalizing PGP message: %w", err)
+	}
 
 	return buf.Bytes(), nil
 }
