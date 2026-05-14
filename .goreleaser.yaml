@@ -12,8 +12,8 @@ version: 2
 before:
   hooks:
     - go mod tidy
-    - sh -c "cp -r build/pcsc-macos /tmp/pcsc-macos && printf '#!/bin/sh\nexec zig cc -target x86_64-macos -I/tmp/pcsc-macos \"$@\"\n' > /tmp/zcc-darwin-amd64 && chmod +x /tmp/zcc-darwin-amd64"
-    - sh -c "printf '#!/bin/sh\nexec zig cc -target aarch64-macos -I/tmp/pcsc-macos \"$@\"\n' > /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-arm64"
+    - sh -c "cp -r build/pcsc-macos /tmp/pcsc-macos && printf '#!/bin/sh\nexec zig cc -target x86_64-macos -I/tmp/pcsc-macos -Wno-incompatible-pointer-types \"$@\"\n' > /tmp/zcc-darwin-amd64 && chmod +x /tmp/zcc-darwin-amd64"
+    - sh -c "printf '#!/bin/sh\nexec zig cc -target aarch64-macos -I/tmp/pcsc-macos -Wno-incompatible-pointer-types \"$@\"\n' > /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-arm64"
 
 builds:
   - id: vervet
