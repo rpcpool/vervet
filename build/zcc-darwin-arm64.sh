@@ -31,4 +31,7 @@ if [ -d "${ZIGLIB}/libc/darwin" ]; then
     sdk_flags+=("-L${ZIGLIB}/libc/darwin/usr/lib")
 fi
 
-exec zig cc -target aarch64-macos -I/tmp/pcsc-macos "${sdk_flags[@]}" "${args[@]}"
+exec zig cc -target aarch64-macos -I/tmp/pcsc-macos \
+    -F/tmp/macos-sdk/System/Library/Frameworks \
+    -Wl,-undefined,dynamic_lookup \
+    "${sdk_flags[@]}" "${args[@]}"

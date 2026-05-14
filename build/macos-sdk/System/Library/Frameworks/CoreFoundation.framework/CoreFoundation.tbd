@@ -1,0 +1,16 @@
+--- !tapi-tbd
+tbd-version:             4
+targets:                 [ x86_64-macos, arm64-macos ]
+uuids:
+  - target:              x86_64-macos
+    value:               00000000-0000-0000-0000-000000000002
+  - target:              arm64-macos
+    value:               00000000-0000-0000-0000-000000000003
+flags:                   []
+install-name:            '/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation'
+current-version:         1
+compatibility-version:   1
+exports:
+  - targets:             [ x86_64-macos, arm64-macos ]
+    symbols:             []
+...

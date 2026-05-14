@@ -13,7 +13,7 @@ before:
   hooks:
     - go mod tidy
     - go clean -cache
-    - sh -c "rm -rf /tmp/pcsc-macos && cp -r build/pcsc-macos /tmp/pcsc-macos && cp build/zcc-darwin-amd64.sh /tmp/zcc-darwin-amd64 && cp build/zcc-darwin-arm64.sh /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-amd64 /tmp/zcc-darwin-arm64"
+    - sh -c "rm -rf /tmp/pcsc-macos /tmp/macos-sdk && cp -r build/pcsc-macos /tmp/pcsc-macos && cp -r build/macos-sdk /tmp/macos-sdk && cp build/zcc-darwin-amd64.sh /tmp/zcc-darwin-amd64 && cp build/zcc-darwin-arm64.sh /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-amd64 /tmp/zcc-darwin-arm64"
 
 builds:
   - id: vervet

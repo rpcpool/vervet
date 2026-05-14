@@ -1,0 +1,24 @@
+--- !tapi-tbd
+tbd-version:             4
+targets:                 [ x86_64-macos, arm64-macos ]
+uuids:
+  - target:              x86_64-macos
+    value:               00000000-0000-0000-0000-000000000000
+  - target:              arm64-macos
+    value:               00000000-0000-0000-0000-000000000001
+flags:                   []
+install-name:            '/System/Library/Frameworks/PCSC.framework/PCSC'
+current-version:         1
+compatibility-version:   1
+exports:
+  - targets:             [ x86_64-macos, arm64-macos ]
+    symbols:             [ _pcsc_stringify_error, _SCardEstablishContext,
+                           _SCardReleaseContext, _SCardIsValidContext,
+                           _SCardCancel, _SCardConnect, _SCardReconnect,
+                           _SCardDisconnect, _SCardBeginTransaction,
+                           _SCardEndTransaction, _SCardStatus,
+                           _SCardGetStatusChange, _SCardTransmit,
+                           _SCardControl, _SCardListReaders,
+                           _SCardListReaderGroups, _SCardFreeMemory,
+                           _SCardGetAttrib, _SCardSetAttrib ]
+...
