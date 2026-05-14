@@ -8,7 +8,6 @@ on:
   pull_request:
     paths:
       - .goreleaser.yaml
-      - .goreleaser.darwin.yaml
   workflow_dispatch:
 
 jobs:
@@ -24,4 +23,4 @@ jobs:
           install-only: true
 
       - name: goreleaser check
-        run: goreleaser check && goreleaser check --config .goreleaser.darwin.yaml
+        run: goreleaser check
