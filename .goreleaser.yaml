@@ -39,11 +39,15 @@ builds:
         env:
           - CGO_ENABLED=1
           - CC=/tmp/zcc-darwin-amd64
+        tags:
+          - netgo
       - goos: darwin
         goarch: arm64
         env:
           - CGO_ENABLED=1
           - CC=/tmp/zcc-darwin-arm64
+        tags:
+          - netgo
 
 archives:
   - formats: [binary]
