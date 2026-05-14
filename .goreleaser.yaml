@@ -4,8 +4,8 @@
 # ci/goreleaser-patch.yaml in Binaries-ci at build time.
 #
 # Darwin targets are cross-compiled on Linux using zig cc, which bundles its
-# own macOS SDK. Wrapper scripts are generated in before.hooks because
-# goreleaser env values cannot contain spaces.
+# own macOS SDK. build/zcc-darwin-*.sh wrappers filter GNU-only linker flags
+# and set the right zig cross-compilation target.
 
 version: 2
 
@@ -13,8 +13,7 @@ before:
   hooks:
     - go mod tidy
     - go clean -cache
-    - sh -c "rm -rf /tmp/pcsc-macos && cp -r build/pcsc-macos /tmp/pcsc-macos && printf '#!/bin/sh\nexec zig cc -target x86_64-macos -I/tmp/pcsc-macos \"$@\"\n' > /tmp/zcc-darwin-amd64 && chmod +x /tmp/zcc-darwin-amd64"
-    - sh -c "printf '#!/bin/sh\nexec zig cc -target aarch64-macos -I/tmp/pcsc-macos \"$@\"\n' > /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-arm64"
+    - sh -c "rm -rf /tmp/pcsc-macos && cp -r build/pcsc-macos /tmp/pcsc-macos && cp build/zcc-darwin-amd64.sh /tmp/zcc-darwin-amd64 && cp build/zcc-darwin-arm64.sh /tmp/zcc-darwin-arm64 && chmod +x /tmp/zcc-darwin-amd64 /tmp/zcc-darwin-arm64"
 
 builds:
   - id: vervet
@@ -39,15 +38,11 @@ builds:
         env:
           - CGO_ENABLED=1
           - CC=/tmp/zcc-darwin-amd64
-        tags:
-          - netgo
       - goos: darwin
         goarch: arm64
         env:
           - CGO_ENABLED=1
           - CC=/tmp/zcc-darwin-arm64
-        tags:
-          - netgo
 
 archives:
   - formats: [binary]
