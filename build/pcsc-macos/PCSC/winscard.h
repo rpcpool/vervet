@@ -119,9 +119,9 @@ LONG SCardBeginTransaction(SCARDHANDLE hCard);
 LONG SCardEndTransaction(SCARDHANDLE hCard, uint32_t dwDisposition);
 
 LONG SCardStatus(SCARDHANDLE hCard, LPSTR mszReaderName, uint32_t *pcchReaderLen, uint32_t *pdwState, uint32_t *pdwProtocol, BYTE *pbAtr, uint32_t *pcbAtrLen);
-LONG SCardGetStatusChange(SCARDCONTEXT hContext, uint32_t dwTimeout, void *rgReaderStates, uint32_t cReaders);
+LONG SCardGetStatusChange(SCARDCONTEXT hContext, uint32_t dwTimeout, LPSCARD_READERSTATE_A rgReaderStates, uint32_t cReaders);
 
-LONG SCardTransmit(SCARDHANDLE hCard, void *pioSendPci, const BYTE *pbSendBuffer, uint32_t cbSendLength, void *pioRecvPci, BYTE *pbRecvBuffer, uint32_t *pcbRecvLength);
+LONG SCardTransmit(SCARDHANDLE hCard, LPSCARD_IO_REQUEST pioSendPci, const BYTE *pbSendBuffer, uint32_t cbSendLength, LPSCARD_IO_REQUEST pioRecvPci, BYTE *pbRecvBuffer, uint32_t *pcbRecvLength);
 LONG SCardControl(SCARDHANDLE hCard, uint32_t dwControlCode, const void *pbSendBuffer, uint32_t cbSendLength, void *pbRecvBuffer, uint32_t cbRecvLength, uint32_t *lpBytesReturned);
 
 LONG SCardListReaders(SCARDCONTEXT hContext, LPCSTR mszGroups, LPSTR mszReaders, uint32_t *pcchReaders);
